@@ -205,8 +205,8 @@ export default function Upload({ userRole }) {
           </div>
 
           {/* Main Grid */}
-          <div className="grid grid-cols-1 gap-5 items-start">
-            {/* LEFT: Form */}
+          <div className="flex flex-col gap-5" style={{maxWidth:'800px',margin:'0 auto',width:'100%'}}>
+            {/* Form Section */}
             <div className="flex flex-col gap-4">
               {/* GPS Card */}
               <div className="card" style={{animationDelay:'0.1s'}}>
@@ -459,10 +459,9 @@ export default function Upload({ userRole }) {
               )}
             </div>
 
-            {/* RIGHT: Result Panel */}
-            <div className="sticky top-[70px]">
-              {(showLoading || result) && (
-                <div className="result-panel">
+            {/* Result Panel */}
+            {(showLoading || result) && (
+              <div className="result-panel">
 
                 {/* Loading State */}
                 {showLoading && (
@@ -577,9 +576,8 @@ export default function Upload({ userRole }) {
                     </div>
                   </div>
                 )}
-                </div>
-              )}
-            </div>
+              </div>
+            )}
           </div>
         </div>
       </main>
