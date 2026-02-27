@@ -1,0 +1,126 @@
+import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import { supabase } from '../lib/supabase';
+import Sidebar from '../components/Sidebar';
+
+export default function Inspections({ userRole }) {
+  const [user, setUser] = useState(null);
+  const [inspections, setInspections] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      setUser(user);
+      fetchInspections(user.id);
+    });
+  }, []);
+
+  const fetchInspections = async (userId) => {
+    try {
+      let query = supabase
+        .from('inspections')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (userRole !== 'admin') {
+        query = query.eq('inspector_id', userId);
+      }
+
+      const { data, error } = await query;
+      if (!error) setInspections(data || []);
+    } catch (error) {
+      console.error('Error fetching inspections:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const toggleSidebar = () => {
+    document.getElementById('sidebar').classList.toggle('open');
+    document.getElementById('overlay').classList.toggle('open');
+  };
+
+  return (
+    <>
+      <Sidebar userRole={userRole} user={user} />
+      
+      <main className="main">
+        <header className="topbar">
+          <button className="hamburger" onClick={toggleSidebar}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <line x1="3" y1="6" x2="21" y2="6"/>
+              <line x1="3" y1="12" x2="21" y2="12"/>
+              <line x1="3" y1="18" x2="21" y2="18"/>
+            </svg>
+          </button>
+          <div className="topbar-breadcrumb">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{color:'var(--text-tertiary)'}}>
+              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+            </svg>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <polyline points="9 18 15 12 9 6"/>
+            </svg>
+            <span>My Inspections</span>
+          </div>
+        </header>
+
+        <div className="page">
+          <div className="page-header">
+            <div className="page-header-top">
+              <h1 className="page-title">My Inspections</h1>
+            </div>
+            <p className="page-subtitle">View all your submitted road inspections</p>
+          </div>
+
+          {loading ? (
+            <div className="text-center py-12">
+              <div className="spinner" style={{width:'32px',height:'32px',margin:'0 auto'}}></div>
+            </div>
+          ) : inspections.length === 0 ? (
+            <div className="card p-12 text-center">
+              <div className="text-6xl mb-4">📋</div>
+              <h3 className="text-lg font-semibold mb-2">No inspections yet</h3>
+              <p className="text-[var(--text-tertiary)] mb-6">Upload your first road inspection to get started</p>
+              <Link to="/upload" className="btn btn-primary">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                  <polyline points="17 8 12 3 7 8"/>
+                  <line x1="12" y1="3" x2="12" y2="15"/>
+                </svg>
+                Upload Inspection
+              </Link>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {inspections.map((inspection) => (
+                <Link key={inspection.id} to={`/inspection/${inspection.id}`} className="card hover:border-[var(--text-primary)] transition-all" style={{textDecoration:'none',color:'inherit'}}>
+                  <div style={{height:'180px',overflow:'hidden',borderBottom:'1px solid var(--border)'}}>
+                    <img src={inspection.annotated_image_url} alt="Inspection" style={{width:'100%',height:'100%',objectFit:'cover'}}/>
+                  </div>
+                  <div style={{padding:'16px'}}>
+                    <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:'12px'}}>
+                      <span className={`pill ${inspection.status === 'Critical' ? 'critical' : inspection.status === 'Moderate' ? 'moderate' : 'good'}`}>
+                        {inspection.status}
+                      </span>
+                      <span className="font-mono text-2xl font-bold" style={{color: inspection.status === 'Critical' ? 'var(--red)' : inspection.status === 'Moderate' ? 'var(--yellow)' : 'var(--green)'}}>
+                        {inspection.score}
+                      </span>
+                    </div>
+                    <p style={{fontSize:'13px',color:'var(--text-secondary)',marginBottom:'8px',display:'-webkit-box',WebkitLineClamp:2,WebkitBoxOrient:'vertical',overflow:'hidden'}}>
+                      {inspection.address || 'Location not available'}
+                    </p>
+                    <div style={{display:'flex',alignItems:'center',gap:'8px',fontSize:'11.5px',color:'var(--text-tertiary)',fontFamily:'Geist Mono, monospace'}}>
+                      <span>{inspection.defect_count || 0} defects</span>
+                      <span>·</span>
+                      <span>{new Date(inspection.created_at).toLocaleDateString()}</span>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
+        </div>
+      </main>
+    </>
+  );
+}
