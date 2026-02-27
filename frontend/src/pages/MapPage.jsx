@@ -8,7 +8,6 @@ export default function MapPage({ userRole }) {
   const [inspections, setInspections] = useState([]);
   const [loading, setLoading] = useState(true);
   const mapRef = useRef(null);
-  const heatmapRef = useRef(null);
   const markersRef = useRef([]);
 
   useEffect(() => {
@@ -49,38 +48,17 @@ export default function MapPage({ userRole }) {
 
     mapRef.current = map;
 
-    // Create heatmap layer
-    const heatmapData = inspections.map(inspection => ({
-      location: new google.maps.LatLng(inspection.lat, inspection.lng),
-      weight: inspection.weight
-    }));
-
-    const heatmap = new google.maps.visualization.HeatmapLayer({
-      data: heatmapData,
-      map: map,
-      radius: 30,
-      gradient: [
-        'rgba(0, 255, 0, 0)',
-        'rgba(0, 255, 0, 1)',
-        'rgba(255, 255, 0, 1)',
-        'rgba(255, 165, 0, 1)',
-        'rgba(255, 0, 0, 1)'
-      ]
-    });
-
-    heatmapRef.current = heatmap;
-
-    // Add markers for each inspection
+    // Add markers for each inspection (no heatmap - deprecated)
     inspections.forEach(inspection => {
       const marker = new google.maps.Marker({
         position: { lat: inspection.lat, lng: inspection.lng },
         map: map,
         icon: {
           path: google.maps.SymbolPath.CIRCLE,
-          scale: 8,
+          scale: 10,
           fillColor: inspection.status === 'Critical' ? '#dc2626' : 
                      inspection.status === 'Moderate' ? '#d97706' : '#16a34a',
-          fillOpacity: 0.8,
+          fillOpacity: 0.9,
           strokeColor: '#fff',
           strokeWeight: 2
         }
@@ -135,16 +113,7 @@ export default function MapPage({ userRole }) {
   };
 
   const addHeatmapPoint = (inspection) => {
-    if (!mapRef.current || !heatmapRef.current) return;
-
-    const newPoint = {
-      location: new google.maps.LatLng(inspection.lat, inspection.lng),
-      weight: 100 - inspection.score
-    };
-
-    const currentData = heatmapRef.current.getData();
-    currentData.push(newPoint);
-    heatmapRef.current.setData(currentData);
+    if (!mapRef.current) return;
 
     // Add marker
     const marker = new google.maps.Marker({
@@ -152,10 +121,10 @@ export default function MapPage({ userRole }) {
       map: mapRef.current,
       icon: {
         path: google.maps.SymbolPath.CIRCLE,
-        scale: 8,
+        scale: 10,
         fillColor: inspection.status === 'Critical' ? '#dc2626' : 
                    inspection.status === 'Moderate' ? '#d97706' : '#16a34a',
-        fillOpacity: 0.8,
+        fillOpacity: 0.9,
         strokeColor: '#fff',
         strokeWeight: 2
       },
@@ -171,7 +140,7 @@ export default function MapPage({ userRole }) {
   };
 
   return (
-    <>
+    <div className="app-with-sidebar">
       <Sidebar userRole={userRole} user={user} />
       <main className="main">
         <header className="topbar">
@@ -205,6 +174,6 @@ export default function MapPage({ userRole }) {
           )}
         </div>
       </main>
-    </>
+    </div>
   );
 }

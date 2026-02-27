@@ -54,7 +54,7 @@ export default function InspectionDetail({ userRole }) {
   }
 
   return (
-    <>
+    <div className="app-with-sidebar">
       <Sidebar userRole={userRole} user={user} />
       <main className="main">
         <header className="topbar">
@@ -162,6 +162,6 @@ export default function InspectionDetail({ userRole }) {
           </div>
         </div>
       </main>
-    </>
+    </div>
   );
 }

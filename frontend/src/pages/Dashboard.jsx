@@ -47,7 +47,7 @@ export default function Dashboard() {
   }
 
   return (
-    <>
+    <div className="app-with-sidebar">
       <Sidebar userRole="admin" user={user} />
       <main className="main">
         <header className="topbar">
@@ -135,6 +135,6 @@ export default function Dashboard() {
           </div>
         </div>
       </main>
-    </>
+    </div>
   );
 }
