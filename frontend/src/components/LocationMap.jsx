@@ -89,7 +89,7 @@ export default function LocationMap({ lat, lng, onLocationChange, editable = fal
       ref={mapRef} 
       style={{
         width: '100%',
-        height: '200px',
+        height: '320px',
         borderRadius: 'var(--radius)',
         overflow: 'hidden',
         border: '1px solid var(--border)'
