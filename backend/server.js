@@ -15,11 +15,13 @@ const inspectRoute = require("./routes/inspect");
 const inspectionsRoute = require("./routes/inspections");
 const statsRoute = require("./routes/stats");
 const heatmapRoute = require("./routes/heatmap");
+const workflowRoute = require("./routes/workflow");
 
 app.use("/api/inspect", inspectRoute);
 app.use("/api/inspections", inspectionsRoute);
 app.use("/api/stats", statsRoute);
 app.use("/api/heatmap", heatmapRoute);
+app.use("/api/workflow", workflowRoute);
 
 // Health check
 app.get("/api/health", (req, res) => {
