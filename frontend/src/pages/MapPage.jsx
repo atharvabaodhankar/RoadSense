@@ -28,7 +28,17 @@ export default function MapPage({ userRole }) {
 
   useEffect(() => {
     if (!loading && inspections.length > 0 && !mapRef.current) {
-      initMap();
+      // Wait for Google Maps to load before initializing
+      if (!window.google) {
+        const checkGoogle = setInterval(() => {
+          if (window.google) {
+            clearInterval(checkGoogle);
+            initMap();
+          }
+        }, 100);
+      } else {
+        initMap();
+      }
     }
   }, [loading, inspections]);
 
@@ -37,14 +47,19 @@ export default function MapPage({ userRole }) {
       ? { lat: inspections[0].lat, lng: inspections[0].lng }
       : { lat: 18.5204, lng: 73.8567 }; // Pune default
 
-    const map = new google.maps.Map(document.getElementById('map'), {
+    // Import maps library
+    const { Map } = await google.maps.importLibrary("maps");
+    
+    // Create map with mapId (required for advanced markers)
+    // Note: Don't use 'styles' property when using mapId - configure styles in Cloud Console instead
+    const map = new Map(document.getElementById('map'), {
       zoom: 12,
       center,
-      mapId: 'ROADSENSE_MAP', // Required for advanced markers
-      styles: [
-        { featureType: 'poi', stylers: [{ visibility: 'off' }] },
-        { featureType: 'transit', stylers: [{ visibility: 'off' }] }
-      ]
+      mapId: 'ROADSENSE_MAP',
+      mapTypeControl: false,
+      streetViewControl: false,
+      fullscreenControl: true,
+      zoomControl: true
     });
 
     mapRef.current = map;

@@ -8,48 +8,60 @@ export default function LocationMap({ lat, lng, onLocationChange, editable = fal
   useEffect(() => {
     if (!mapRef.current || !lat || !lng) return;
 
-    // Load Google Maps script if not already loaded
-    if (!window.google) {
-      const script = document.createElement('script');
-      script.src = `https://maps.googleapis.com/maps/api/js?key=${import.meta.env.VITE_GOOGLE_MAPS_KEY}`;
-      script.async = true;
-      script.defer = true;
-      script.onload = initMap;
-      document.head.appendChild(script);
-    } else {
-      initMap();
-    }
+    initMap();
 
-    function initMap() {
+    async function initMap() {
+      // Wait for Google Maps to load
+      if (!window.google) {
+        await new Promise((resolve) => {
+          const checkGoogle = setInterval(() => {
+            if (window.google) {
+              clearInterval(checkGoogle);
+              resolve();
+            }
+          }, 100);
+        });
+      }
+
       if (!window.google || !mapRef.current) return;
 
       const position = { lat, lng };
 
-      // Create map
-      const map = new window.google.maps.Map(mapRef.current, {
+      // Import maps library
+      const { Map } = await window.google.maps.importLibrary("maps");
+
+      // Create map with mapId for advanced markers
+      // Note: Don't use 'styles' property when using mapId - configure styles in Cloud Console instead
+      const map = new Map(mapRef.current, {
         center: position,
         zoom: 16,
+        mapId: 'ROADSENSE_LOCATION_MAP',
         mapTypeControl: false,
         streetViewControl: false,
         fullscreenControl: false,
-        zoomControl: true,
-        styles: [
-          {
-            featureType: 'poi',
-            elementType: 'labels',
-            stylers: [{ visibility: 'off' }]
-          }
-        ]
+        zoomControl: true
       });
 
       mapInstanceRef.current = map;
 
-      // Create marker
-      const marker = new window.google.maps.Marker({
-        position,
+      // Import marker library
+      const { AdvancedMarkerElement, PinElement } = await window.google.maps.importLibrary("marker");
+
+      // Create pin
+      const pin = new PinElement({
+        background: '#0d9488',
+        borderColor: '#fff',
+        glyphColor: '#fff',
+        scale: 1.2
+      });
+
+      // Create advanced marker
+      const marker = new AdvancedMarkerElement({
         map,
-        draggable: editable,
-        animation: window.google.maps.Animation.DROP,
+        position,
+        content: pin.element,
+        gmpDraggable: editable,
+        title: 'Inspection Location'
       });
 
       markerRef.current = marker;
@@ -63,10 +75,12 @@ export default function LocationMap({ lat, lng, onLocationChange, editable = fal
         });
 
         // Handle map click
-        map.addListener('click', (event) => {
+        map.addListener('click', async (event) => {
           const newLat = event.latLng.lat();
           const newLng = event.latLng.lng();
-          marker.setPosition({ lat: newLat, lng: newLng });
+          
+          // Update marker position
+          marker.position = { lat: newLat, lng: newLng };
           onLocationChange(newLat, newLng);
         });
       }
@@ -77,7 +91,7 @@ export default function LocationMap({ lat, lng, onLocationChange, editable = fal
   useEffect(() => {
     if (markerRef.current && lat && lng) {
       const newPosition = { lat, lng };
-      markerRef.current.setPosition(newPosition);
+      markerRef.current.position = newPosition;
       if (mapInstanceRef.current) {
         mapInstanceRef.current.panTo(newPosition);
       }
