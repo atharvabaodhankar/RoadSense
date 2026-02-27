@@ -477,6 +477,9 @@ input:focus, textarea:focus, select:focus {
 .page {
   padding: 32px 28px;
   flex: 1;
+  max-width: 1400px;
+  margin: 0 auto;
+  width: 100%;
 }
 
 .page-header {

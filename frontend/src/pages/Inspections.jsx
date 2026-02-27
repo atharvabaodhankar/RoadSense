@@ -78,7 +78,15 @@ export default function Inspections({ userRole }) {
             </div>
           ) : inspections.length === 0 ? (
             <div className="card p-12 text-center">
-              <div className="text-6xl mb-4">📋</div>
+              <div className="mb-4">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{width:'64px',height:'64px',margin:'0 auto',color:'var(--text-tertiary)'}}>
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                  <polyline points="14 2 14 8 20 8"/>
+                  <line x1="16" y1="13" x2="8" y2="13"/>
+                  <line x1="16" y1="17" x2="8" y2="17"/>
+                  <polyline points="10 9 9 9 8 9"/>
+                </svg>
+              </div>
               <h3 className="text-lg font-semibold mb-2">No inspections yet</h3>
               <p className="text-[var(--text-tertiary)] mb-6">Upload your first road inspection to get started</p>
               <Link to="/upload" className="btn btn-primary">

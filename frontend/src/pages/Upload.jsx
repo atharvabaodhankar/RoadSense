@@ -411,7 +411,12 @@ export default function Upload({ userRole }) {
                         <img className="preview-img" src={imagePreview} alt="Road preview"/>
                         <div className="preview-meta">
                           <div className="preview-file-info">
-                            <div className="preview-file-icon">🛣</div>
+                            <div className="preview-file-icon">
+                              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{width:'16px',height:'16px',color:'var(--teal)'}}>
+                                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                                <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                              </svg>
+                            </div>
                             <div>
                               <div className="preview-file-name">{selectedImage.name}</div>
                               <div className="preview-file-size">{(selectedImage.size / 1024 / 1024).toFixed(1)} MB</div>
@@ -463,13 +468,23 @@ export default function Upload({ userRole }) {
                 {showLoading && (
                   <div className="result-loading show">
                     <div className="loading-header">
-                      <div className="loading-icon">🤖</div>
+                      <div className="loading-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{width:'32px',height:'32px',color:'var(--teal)'}}>
+                          <circle cx="12" cy="12" r="10"/>
+                          <path d="M12 16v-4"/>
+                          <path d="M12 8h.01"/>
+                        </svg>
+                      </div>
                       <div className="loading-title">AI is analyzing your road photo</div>
                       <div className="loading-sub">YOLOv8 road damage detection model</div>
                     </div>
                     <div className="loading-steps-list">
                       <div className="loading-step">
-                        <div className="loading-step-icon active">📡</div>
+                        <div className="loading-step-icon active">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{width:'16px',height:'16px'}}>
+                            <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                          </svg>
+                        </div>
                         <div className="loading-step-text">
                           <div className="loading-step-label">Processing image</div>
                           <div className="loading-step-status active-text">Running detection...</div>
@@ -531,7 +546,12 @@ export default function Upload({ userRole }) {
                     <div className="address-section">
                       <div className="section-title" style={{marginBottom:'10px'}}>Location Logged</div>
                       <div className="address-row">
-                        <div className="address-icon">📍</div>
+                        <div className="address-icon">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{width:'18px',height:'18px',color:'var(--teal)'}}>
+                            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                            <circle cx="12" cy="10" r="3"/>
+                          </svg>
+                        </div>
                         <div>
                           <div className="address-text">{result.address}</div>
                           <div className="address-coords">{result.lat.toFixed(4)}°N  {result.lng.toFixed(4)}°E</div>
