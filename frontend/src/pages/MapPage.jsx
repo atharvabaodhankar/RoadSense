@@ -32,7 +32,7 @@ export default function MapPage({ userRole }) {
     }
   }, [loading, inspections]);
 
-  const initMap = () => {
+  const initMap = async () => {
     const center = inspections.length > 0 
       ? { lat: inspections[0].lat, lng: inspections[0].lng }
       : { lat: 18.5204, lng: 73.8567 }; // Pune default
@@ -40,6 +40,7 @@ export default function MapPage({ userRole }) {
     const map = new google.maps.Map(document.getElementById('map'), {
       zoom: 12,
       center,
+      mapId: 'ROADSENSE_MAP', // Required for advanced markers
       styles: [
         { featureType: 'poi', stylers: [{ visibility: 'off' }] },
         { featureType: 'transit', stylers: [{ visibility: 'off' }] }
@@ -48,20 +49,27 @@ export default function MapPage({ userRole }) {
 
     mapRef.current = map;
 
-    // Add markers for each inspection (no heatmap - deprecated)
+    // Import marker library
+    const { AdvancedMarkerElement, PinElement } = await google.maps.importLibrary("marker");
+
+    // Add advanced markers for each inspection
     inspections.forEach(inspection => {
-      const marker = new google.maps.Marker({
+      // Create custom pin with color
+      const pinColor = inspection.status === 'Critical' ? '#dc2626' : 
+                       inspection.status === 'Moderate' ? '#d97706' : '#16a34a';
+      
+      const pin = new PinElement({
+        background: pinColor,
+        borderColor: '#fff',
+        glyphColor: '#fff',
+        scale: 1.2
+      });
+
+      const marker = new AdvancedMarkerElement({
+        map,
         position: { lat: inspection.lat, lng: inspection.lng },
-        map: map,
-        icon: {
-          path: google.maps.SymbolPath.CIRCLE,
-          scale: 10,
-          fillColor: inspection.status === 'Critical' ? '#dc2626' : 
-                     inspection.status === 'Moderate' ? '#d97706' : '#16a34a',
-          fillOpacity: 0.9,
-          strokeColor: '#fff',
-          strokeWeight: 2
-        }
+        content: pin.element,
+        title: inspection.address || 'Inspection'
       });
 
       const infoWindow = new google.maps.InfoWindow({
@@ -69,17 +77,11 @@ export default function MapPage({ userRole }) {
           <div style="font-family:Geist,sans-serif;padding:8px;min-width:200px;">
             <div style="font-weight:600;margin-bottom:6px;">${inspection.address || 'Unknown location'}</div>
             <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
-              <span style="font-family:Geist Mono,monospace;font-size:20px;font-weight:700;color:${
-                inspection.status === 'Critical' ? '#dc2626' : 
-                inspection.status === 'Moderate' ? '#d97706' : '#16a34a'
-              }">${inspection.score}</span>
+              <span style="font-family:Geist Mono,monospace;font-size:20px;font-weight:700;color:${pinColor}">${inspection.score}</span>
               <span style="padding:2px 8px;border-radius:12px;font-size:11px;font-weight:500;background:${
                 inspection.status === 'Critical' ? '#fef2f2' : 
                 inspection.status === 'Moderate' ? '#fefce8' : '#f0fdf4'
-              };color:${
-                inspection.status === 'Critical' ? '#dc2626' : 
-                inspection.status === 'Moderate' ? '#ca8a04' : '#16a34a'
-              }">${inspection.status}</span>
+              };color:${pinColor}">${inspection.status}</span>
             </div>
             <div style="font-size:11px;color:#8F8F8B;font-family:Geist Mono,monospace;">
               ${new Date(inspection.created_at).toLocaleDateString()}
@@ -112,23 +114,27 @@ export default function MapPage({ userRole }) {
     };
   };
 
-  const addHeatmapPoint = (inspection) => {
+  const addHeatmapPoint = async (inspection) => {
     if (!mapRef.current) return;
 
-    // Add marker
-    const marker = new google.maps.Marker({
-      position: { lat: inspection.lat, lng: inspection.lng },
+    // Import marker library
+    const { AdvancedMarkerElement, PinElement } = await google.maps.importLibrary("marker");
+
+    const pinColor = inspection.status === 'Critical' ? '#dc2626' : 
+                     inspection.status === 'Moderate' ? '#d97706' : '#16a34a';
+    
+    const pin = new PinElement({
+      background: pinColor,
+      borderColor: '#fff',
+      glyphColor: '#fff',
+      scale: 1.2
+    });
+
+    const marker = new AdvancedMarkerElement({
       map: mapRef.current,
-      icon: {
-        path: google.maps.SymbolPath.CIRCLE,
-        scale: 10,
-        fillColor: inspection.status === 'Critical' ? '#dc2626' : 
-                   inspection.status === 'Moderate' ? '#d97706' : '#16a34a',
-        fillOpacity: 0.9,
-        strokeColor: '#fff',
-        strokeWeight: 2
-      },
-      animation: google.maps.Animation.DROP
+      position: { lat: inspection.lat, lng: inspection.lng },
+      content: pin.element,
+      title: inspection.address || 'Inspection'
     });
 
     markersRef.current.push(marker);
