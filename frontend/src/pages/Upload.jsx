@@ -162,7 +162,7 @@ export default function Upload({ userRole }) {
   };
 
   return (
-    <>
+    <div className="app-with-sidebar">
       <Sidebar userRole={userRole} user={user} />
       
       <main className="main">
@@ -583,6 +583,6 @@ export default function Upload({ userRole }) {
           </div>
         </div>
       </main>
-    </>
+    </div>
   );
 }
