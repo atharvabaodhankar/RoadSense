@@ -30,9 +30,40 @@ export default function Inspections({ userRole }) {
       }
 
       const { data, error } = await query;
-      if (!error) setInspections(data || []);
+      
+      if (error) {
+        console.error('Supabase error:', error);
+        setInspections([]);
+        setLoading(false);
+        return;
+      }
+
+      // For admin, fetch inspector emails separately
+      if (userRole === 'admin' && data && data.length > 0) {
+        const inspectorIds = [...new Set(data.map(i => i.inspector_id))];
+        const { data: profiles } = await supabase
+          .from('profiles')
+          .select('id, email')
+          .in('id', inspectorIds);
+
+        // Map emails to inspections
+        const profileMap = {};
+        profiles?.forEach(p => {
+          profileMap[p.id] = p.email;
+        });
+
+        const inspectionsWithEmails = data.map(inspection => ({
+          ...inspection,
+          inspector_email: profileMap[inspection.inspector_id] || 'Unknown'
+        }));
+
+        setInspections(inspectionsWithEmails);
+      } else {
+        setInspections(data || []);
+      }
     } catch (error) {
       console.error('Error fetching inspections:', error);
+      setInspections([]);
     } finally {
       setLoading(false);
     }
@@ -91,16 +122,20 @@ export default function Inspections({ userRole }) {
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
               <polyline points="9 18 15 12 9 6"/>
             </svg>
-            <span>My Inspections</span>
+            <span>{userRole === 'admin' ? 'All Inspections' : 'My Inspections'}</span>
           </div>
         </header>
 
         <div className="page">
           <div className="page-header">
             <div className="page-header-top">
-              <h1 className="page-title">My Inspections</h1>
+              <h1 className="page-title">{userRole === 'admin' ? 'All Inspections' : 'My Inspections'}</h1>
             </div>
-            <p className="page-subtitle">View all your submitted road inspections</p>
+            <p className="page-subtitle">
+              {userRole === 'admin' 
+                ? 'View all road inspections submitted by field inspectors' 
+                : 'View all your submitted road inspections'}
+            </p>
           </div>
 
           {loading ? (
@@ -119,15 +154,21 @@ export default function Inspections({ userRole }) {
                 </svg>
               </div>
               <h3 className="text-lg font-semibold mb-2">No inspections yet</h3>
-              <p className="text-[var(--text-tertiary)] mb-6">Upload your first road inspection to get started</p>
-              <Link to="/upload" className="btn btn-primary">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                  <polyline points="17 8 12 3 7 8"/>
-                  <line x1="12" y1="3" x2="12" y2="15"/>
-                </svg>
-                Upload Inspection
-              </Link>
+              <p className="text-[var(--text-tertiary)] mb-6">
+                {userRole === 'admin' 
+                  ? 'No inspections have been submitted by field inspectors yet' 
+                  : 'Upload your first road inspection to get started'}
+              </p>
+              {userRole !== 'admin' && (
+                <Link to="/upload" className="btn btn-primary">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                    <polyline points="17 8 12 3 7 8"/>
+                    <line x1="12" y1="3" x2="12" y2="15"/>
+                  </svg>
+                  Upload Inspection
+                </Link>
+              )}
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -185,11 +226,20 @@ export default function Inspections({ userRole }) {
                       <p style={{fontSize:'13px',color:'var(--text-secondary)',marginBottom:'8px',display:'-webkit-box',WebkitLineClamp:2,WebkitBoxOrient:'vertical',overflow:'hidden'}}>
                         {inspection.address || 'Location not available'}
                       </p>
-                      <div style={{display:'flex',alignItems:'center',gap:'8px',fontSize:'11.5px',color:'var(--text-tertiary)',fontFamily:'Geist Mono, monospace'}}>
+                      <div style={{display:'flex',alignItems:'center',gap:'8px',fontSize:'11.5px',color:'var(--text-tertiary)',fontFamily:'Geist Mono, monospace',marginBottom:'6px'}}>
                         <span>{inspection.defect_count || 0} defects</span>
                         <span>·</span>
                         <span>{new Date(inspection.created_at).toLocaleDateString()}</span>
                       </div>
+                      {userRole === 'admin' && inspection.inspector_email && (
+                        <div style={{display:'flex',alignItems:'center',gap:'6px',fontSize:'11px',color:'var(--text-tertiary)',paddingTop:'6px',borderTop:'1px solid var(--border)'}}>
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{width:'12px',height:'12px'}}>
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                            <circle cx="12" cy="7" r="4"/>
+                          </svg>
+                          <span>{inspection.inspector_email}</span>
+                        </div>
+                      )}
                     </div>
                   </Link>
                 </div>
