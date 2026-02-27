@@ -1321,3 +1321,24 @@ input:focus, textarea:focus, select:focus {
   box-shadow: 0 4px 12px rgba(13,148,136,0.35);
   transform: translateY(-1px);
 }
+
+/* Modal Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -45%);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%);
+  }
+}

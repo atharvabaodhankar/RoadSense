@@ -73,6 +73,12 @@ router.delete("/:id", authenticateUser, async (req, res) => {
   try {
     const { id } = req.params;
 
+    console.log('Delete request:', {
+      inspectionId: id,
+      userId: req.user.id,
+      userRole: req.user.role
+    });
+
     // First check if inspection exists and user has permission
     let query = supabase
       .from("inspections")
@@ -82,12 +88,25 @@ router.delete("/:id", authenticateUser, async (req, res) => {
 
     const { data: inspection, error: fetchError } = await query;
 
+    console.log('Inspection data:', inspection);
+    console.log('Fetch error:', fetchError);
+
     if (fetchError || !inspection) {
       return res.status(404).json({ error: "Inspection not found" });
     }
 
     // Check permission: admin can delete any, users can delete their own
-    if (req.user.role !== "admin" && inspection.inspector_id !== req.user.id) {
+    const isOwner = inspection.inspector_id === req.user.id;
+    const isAdmin = req.user.role === "admin";
+    
+    console.log('Permission check:', {
+      isOwner,
+      isAdmin,
+      inspectorId: inspection.inspector_id,
+      userId: req.user.id
+    });
+
+    if (!isAdmin && !isOwner) {
       return res.status(403).json({ error: "Not authorized to delete this inspection" });
     }
 
@@ -99,6 +118,7 @@ router.delete("/:id", authenticateUser, async (req, res) => {
 
     if (error) throw error;
 
+    console.log('Inspection deleted successfully');
     res.json({ success: true, message: "Inspection deleted" });
   } catch (error) {
     console.error("Delete inspection error:", error);

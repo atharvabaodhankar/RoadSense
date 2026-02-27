@@ -9,6 +9,7 @@ export default function Inspections({ userRole }) {
   const [inspections, setInspections] = useState([]);
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState(null);
+  const [deleteModal, setDeleteModal] = useState({ show: false, inspectionId: null });
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
@@ -37,36 +38,31 @@ export default function Inspections({ userRole }) {
     }
   };
 
-  const handleDelete = async (e, inspectionId) => {
+  const openDeleteModal = (e, inspectionId) => {
     e.preventDefault();
     e.stopPropagation();
-    
-    console.log('Delete button clicked for inspection:', inspectionId);
-    
-    if (!window.confirm('Are you sure you want to delete this inspection? This action cannot be undone.')) {
-      console.log('User cancelled deletion');
-      return;
-    }
+    setDeleteModal({ show: true, inspectionId });
+  };
 
-    console.log('Starting deletion...');
+  const closeDeleteModal = () => {
+    setDeleteModal({ show: false, inspectionId: null });
+  };
+
+  const confirmDelete = async () => {
+    const inspectionId = deleteModal.inspectionId;
     setDeleting(inspectionId);
+    closeDeleteModal();
     
     try {
-      console.log('Making DELETE request to:', `/inspections/${inspectionId}`);
-      const response = await api.delete(`/inspections/${inspectionId}`);
-      console.log('Delete response:', response.data);
+      await api.delete(`/inspections/${inspectionId}`);
       
       // Remove from local state
       setInspections(inspections.filter(i => i.id !== inspectionId));
-      console.log('Inspection removed from state');
     } catch (error) {
       console.error('Delete error:', error);
-      console.error('Error response:', error.response?.data);
-      console.error('Error status:', error.response?.status);
       alert('Failed to delete inspection: ' + (error.response?.data?.error || error.message));
     } finally {
       setDeleting(null);
-      console.log('Delete operation completed');
     }
   };
 
@@ -140,7 +136,7 @@ export default function Inspections({ userRole }) {
                   <button
                     onClick={(e) => {
                       console.log('BUTTON CLICKED!', inspection.id);
-                      handleDelete(e, inspection.id);
+                      openDeleteModal(e, inspection.id);
                     }}
                     disabled={deleting === inspection.id}
                     style={{
@@ -202,6 +198,91 @@ export default function Inspections({ userRole }) {
           )}
         </div>
       </main>
+
+      {/* Delete Confirmation Modal */}
+      {deleteModal.show && (
+        <>
+          <div 
+            style={{
+              position:'fixed',
+              top:0,
+              left:0,
+              right:0,
+              bottom:0,
+              background:'rgba(0,0,0,0.5)',
+              backdropFilter:'blur(4px)',
+              zIndex:9998,
+              animation:'fadeIn 0.2s ease-out'
+            }}
+            onClick={closeDeleteModal}
+          />
+          <div
+            style={{
+              position:'fixed',
+              top:'50%',
+              left:'50%',
+              transform:'translate(-50%, -50%)',
+              background:'var(--bg)',
+              borderRadius:'12px',
+              boxShadow:'0 20px 60px rgba(0,0,0,0.3)',
+              zIndex:9999,
+              width:'90%',
+              maxWidth:'440px',
+              animation:'slideUp 0.2s ease-out'
+            }}
+          >
+            <div style={{padding:'24px'}}>
+              <div style={{display:'flex',alignItems:'flex-start',gap:'16px',marginBottom:'20px'}}>
+                <div style={{
+                  width:'48px',
+                  height:'48px',
+                  borderRadius:'50%',
+                  background:'#fef2f2',
+                  display:'flex',
+                  alignItems:'center',
+                  justifyContent:'center',
+                  flexShrink:0
+                }}>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{width:'24px',height:'24px',color:'#dc2626'}}>
+                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                    <line x1="12" y1="9" x2="12" y2="13"/>
+                    <line x1="12" y1="17" x2="12.01" y2="17"/>
+                  </svg>
+                </div>
+                <div style={{flex:1}}>
+                  <h3 style={{fontSize:'18px',fontWeight:600,color:'var(--text-primary)',marginBottom:'8px'}}>
+                    Delete Inspection
+                  </h3>
+                  <p style={{fontSize:'14px',color:'var(--text-secondary)',lineHeight:'1.5'}}>
+                    Are you sure you want to delete this inspection? This action cannot be undone and all associated data will be permanently removed.
+                  </p>
+                </div>
+              </div>
+              <div style={{display:'flex',gap:'12px',justifyContent:'flex-end'}}>
+                <button 
+                  className="btn btn-ghost"
+                  onClick={closeDeleteModal}
+                  style={{minWidth:'100px'}}
+                >
+                  Cancel
+                </button>
+                <button 
+                  className="btn"
+                  onClick={confirmDelete}
+                  style={{
+                    minWidth:'100px',
+                    background:'#dc2626',
+                    color:'white',
+                    border:'1px solid #dc2626'
+                  }}
+                >
+                  Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }
