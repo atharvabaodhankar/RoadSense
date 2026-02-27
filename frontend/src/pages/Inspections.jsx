@@ -41,22 +41,32 @@ export default function Inspections({ userRole }) {
     e.preventDefault();
     e.stopPropagation();
     
+    console.log('Delete button clicked for inspection:', inspectionId);
+    
     if (!window.confirm('Are you sure you want to delete this inspection? This action cannot be undone.')) {
+      console.log('User cancelled deletion');
       return;
     }
 
+    console.log('Starting deletion...');
     setDeleting(inspectionId);
     
     try {
-      await api.delete(`/inspections/${inspectionId}`);
+      console.log('Making DELETE request to:', `/inspections/${inspectionId}`);
+      const response = await api.delete(`/inspections/${inspectionId}`);
+      console.log('Delete response:', response.data);
       
       // Remove from local state
       setInspections(inspections.filter(i => i.id !== inspectionId));
+      console.log('Inspection removed from state');
     } catch (error) {
       console.error('Delete error:', error);
+      console.error('Error response:', error.response?.data);
+      console.error('Error status:', error.response?.status);
       alert('Failed to delete inspection: ' + (error.response?.data?.error || error.message));
     } finally {
       setDeleting(null);
+      console.log('Delete operation completed');
     }
   };
 
@@ -126,11 +136,13 @@ export default function Inspections({ userRole }) {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {inspections.map((inspection) => (
-                <div key={inspection.id} className="card hover:border-[var(--text-primary)] transition-all" style={{position:'relative'}}>
+                <div key={inspection.id} style={{position:'relative'}}>
                   <button
-                    onClick={(e) => handleDelete(e, inspection.id)}
+                    onClick={(e) => {
+                      console.log('BUTTON CLICKED!', inspection.id);
+                      handleDelete(e, inspection.id);
+                    }}
                     disabled={deleting === inspection.id}
-                    className="btn btn-ghost"
                     style={{
                       position:'absolute',
                       top:'12px',
@@ -139,17 +151,21 @@ export default function Inspections({ userRole }) {
                       minWidth:'unset',
                       background:'rgba(255,255,255,0.95)',
                       backdropFilter:'blur(8px)',
-                      border:'1px solid var(--border)',
+                      border:'1px solid #e5e5e0',
+                      borderRadius:'6px',
                       boxShadow:'0 2px 8px rgba(0,0,0,0.1)',
-                      zIndex:10,
-                      cursor:'pointer'
+                      zIndex:100,
+                      cursor:'pointer',
+                      display:'flex',
+                      alignItems:'center',
+                      justifyContent:'center'
                     }}
                     title="Delete inspection"
                   >
                     {deleting === inspection.id ? (
                       <div className="spinner" style={{width:'16px',height:'16px'}}></div>
                     ) : (
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{width:'16px',height:'16px',color:'var(--red)'}}>
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{width:'16px',height:'16px',color:'#dc2626'}}>
                         <polyline points="3 6 5 6 21 6"/>
                         <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
                         <line x1="10" y1="11" x2="10" y2="17"/>
@@ -157,7 +173,7 @@ export default function Inspections({ userRole }) {
                       </svg>
                     )}
                   </button>
-                  <Link to={`/inspection/${inspection.id}`} style={{textDecoration:'none',color:'inherit',display:'block'}}>
+                  <Link to={`/inspection/${inspection.id}`} className="card hover:border-[var(--text-primary)] transition-all" style={{textDecoration:'none',color:'inherit',display:'block'}}>
                     <div style={{height:'180px',overflow:'hidden',borderBottom:'1px solid var(--border)'}}>
                       <img src={inspection.annotated_image_url} alt="Inspection" style={{width:'100%',height:'100%',objectFit:'cover'}}/>
                     </div>

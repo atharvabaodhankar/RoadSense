@@ -69,23 +69,21 @@ export default function MapPage({ userRole }) {
 
     // Add advanced markers for each inspection
     inspections.forEach(inspection => {
-      // Create custom pin with color
       const pinColor = inspection.status === 'Critical' ? '#dc2626' : 
                        inspection.status === 'Moderate' ? '#d97706' : '#16a34a';
       
-      const pin = new PinElement({
-        background: pinColor,
-        borderColor: '#fff',
-        glyphColor: '#fff',
-        scale: 1.2
-      });
-
       const marker = new AdvancedMarkerElement({
         map,
         position: { lat: inspection.lat, lng: inspection.lng },
-        content: pin.element,
         title: inspection.address || 'Inspection'
       });
+
+      // Apply custom pin styling
+      const pinElement = marker.content;
+      pinElement.background = pinColor;
+      pinElement.borderColor = '#fff';
+      pinElement.glyphColor = '#fff';
+      pinElement.scale = 1.2;
 
       const infoWindow = new google.maps.InfoWindow({
         content: `
@@ -133,24 +131,23 @@ export default function MapPage({ userRole }) {
     if (!mapRef.current) return;
 
     // Import marker library
-    const { AdvancedMarkerElement, PinElement } = await google.maps.importLibrary("marker");
+    const { AdvancedMarkerElement } = await google.maps.importLibrary("marker");
 
     const pinColor = inspection.status === 'Critical' ? '#dc2626' : 
                      inspection.status === 'Moderate' ? '#d97706' : '#16a34a';
     
-    const pin = new PinElement({
-      background: pinColor,
-      borderColor: '#fff',
-      glyphColor: '#fff',
-      scale: 1.2
-    });
-
     const marker = new AdvancedMarkerElement({
       map: mapRef.current,
       position: { lat: inspection.lat, lng: inspection.lng },
-      content: pin.element,
       title: inspection.address || 'Inspection'
     });
+
+    // Apply custom pin styling
+    const pinElement = marker.content;
+    pinElement.background = pinColor;
+    pinElement.borderColor = '#fff';
+    pinElement.glyphColor = '#fff';
+    pinElement.scale = 1.2;
 
     markersRef.current.push(marker);
   };

@@ -47,22 +47,20 @@ export default function LocationMap({ lat, lng, onLocationChange, editable = fal
       // Import marker library
       const { AdvancedMarkerElement, PinElement } = await window.google.maps.importLibrary("marker");
 
-      // Create pin
-      const pin = new PinElement({
-        background: '#0d9488',
-        borderColor: '#fff',
-        glyphColor: '#fff',
-        scale: 1.2
-      });
-
-      // Create advanced marker
+      // Create advanced marker with PinElement
       const marker = new AdvancedMarkerElement({
         map,
         position,
-        content: pin.element,
         gmpDraggable: editable,
         title: 'Inspection Location'
       });
+
+      // Apply custom pin styling
+      const pinElement = marker.content;
+      pinElement.background = '#0d9488';
+      pinElement.borderColor = '#fff';
+      pinElement.glyphColor = '#fff';
+      pinElement.scale = 1.2;
 
       markerRef.current = marker;
 
