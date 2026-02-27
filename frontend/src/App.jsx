@@ -76,14 +76,39 @@ function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<Landing />} />
-        <Route path="/login" element={!session ? <Login /> : <Navigate to="/upload" />} />
-        <Route path="/signup" element={!session ? <Signup /> : <Navigate to="/upload" />} />
+        <Route 
+          path="/" 
+          element={
+            !session ? <Landing /> :
+            userRole === 'admin' ? <Navigate to="/dashboard" /> :
+            <Navigate to="/upload" />
+          } 
+        />
+        <Route 
+          path="/login" 
+          element={
+            !session ? <Login /> : 
+            userRole === 'admin' ? <Navigate to="/dashboard" /> : 
+            <Navigate to="/upload" />
+          } 
+        />
+        <Route 
+          path="/signup" 
+          element={
+            !session ? <Signup /> : 
+            userRole === 'admin' ? <Navigate to="/dashboard" /> : 
+            <Navigate to="/upload" />
+          } 
+        />
         
         {/* Protected Routes */}
         <Route
           path="/upload"
-          element={session ? <Upload userRole={userRole} /> : <Navigate to="/login" />}
+          element={
+            !session ? <Navigate to="/login" /> :
+            userRole === 'admin' ? <Navigate to="/dashboard" /> :
+            <Upload userRole={userRole} />
+          }
         />
         <Route
           path="/inspections"

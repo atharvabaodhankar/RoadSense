@@ -72,6 +72,8 @@ router.post("/:id/complete", authenticateUser, requireAdmin, upload.single("afte
     const { id } = req.params;
     const { completion_date, admin_notes } = req.body;
 
+    console.log('Complete request:', { id, completion_date, admin_notes, hasFile: !!req.file });
+
     if (!req.file) {
       return res.status(400).json({ error: "After image is required to complete inspection" });
     }
@@ -80,6 +82,8 @@ router.post("/:id/complete", authenticateUser, requireAdmin, upload.single("afte
     const fileName = `after-${id}-${Date.now()}${path.extname(req.file.originalname)}`;
     const fileBuffer = fs.readFileSync(req.file.path);
 
+    console.log('Uploading to Supabase storage:', fileName);
+
     const { data: uploadData, error: uploadError } = await supabase.storage
       .from("inspections")
       .upload(fileName, fileBuffer, {
@@ -87,11 +91,23 @@ router.post("/:id/complete", authenticateUser, requireAdmin, upload.single("afte
         upsert: false
       });
 
-    if (uploadError) throw uploadError;
+    if (uploadError) {
+      console.error('Supabase upload error:', uploadError);
+      // Clean up temp file
+      if (fs.existsSync(req.file.path)) {
+        fs.unlinkSync(req.file.path);
+      }
+      return res.status(500).json({ 
+        error: "Failed to upload image to storage", 
+        details: uploadError.message 
+      });
+    }
 
     const { data: { publicUrl } } = supabase.storage
       .from("inspections")
       .getPublicUrl(fileName);
+
+    console.log('Image uploaded, public URL:', publicUrl);
 
     // Update inspection
     const updateData = {
@@ -106,6 +122,8 @@ router.post("/:id/complete", authenticateUser, requireAdmin, upload.single("afte
       updateData.admin_notes = admin_notes;
     }
 
+    console.log('Updating inspection with:', updateData);
+
     const { data, error } = await supabase
       .from("inspections")
       .update(updateData)
@@ -113,18 +131,25 @@ router.post("/:id/complete", authenticateUser, requireAdmin, upload.single("afte
       .select()
       .single();
 
-    if (error) throw error;
+    if (error) {
+      console.error('Database update error:', error);
+      throw error;
+    }
 
     // Clean up temp file
     fs.unlinkSync(req.file.path);
 
+    console.log('Inspection completed successfully');
     res.json({ success: true, inspection: data });
   } catch (error) {
     console.error("Complete inspection error:", error);
     if (req.file && fs.existsSync(req.file.path)) {
       fs.unlinkSync(req.file.path);
     }
-    res.status(500).json({ error: "Failed to complete inspection" });
+    res.status(500).json({ 
+      error: "Failed to complete inspection",
+      details: error.message 
+    });
   }
 });
 
