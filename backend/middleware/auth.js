@@ -10,9 +10,29 @@ async function authenticateUser(req, res, next) {
 
     const token = authHeader.split(" ")[1];
     
-    const { data: { user }, error } = await supabase.auth.getUser(token);
+    // Add timeout and retry logic
+    let retries = 2;
+    let user = null;
+    let lastError = null;
+
+    while (retries > 0 && !user) {
+      try {
+        const { data, error } = await supabase.auth.getUser(token);
+        if (error) throw error;
+        user = data.user;
+        break;
+      } catch (err) {
+        lastError = err;
+        retries--;
+        if (retries > 0) {
+          console.log(`Auth retry... (${retries} left)`);
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+      }
+    }
     
-    if (error || !user) {
+    if (!user) {
+      console.error("Auth failed after retries:", lastError);
       return res.status(401).json({ error: "Invalid or expired token" });
     }
 
