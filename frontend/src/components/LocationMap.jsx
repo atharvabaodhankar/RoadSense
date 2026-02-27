@@ -31,15 +31,28 @@ export default function LocationMap({ lat, lng, onLocationChange, editable = fal
       const { Map } = await window.google.maps.importLibrary("maps");
 
       // Create map with mapId for advanced markers
-      // Note: Don't use 'styles' property when using mapId - configure styles in Cloud Console instead
       const map = new Map(mapRef.current, {
         center: position,
         zoom: 16,
         mapId: 'ROADSENSE_LOCATION_MAP',
-        mapTypeControl: false,
-        streetViewControl: false,
-        fullscreenControl: false,
-        zoomControl: true
+        mapTypeControl: true,
+        mapTypeControlOptions: {
+          style: google.maps.MapTypeControlStyle.DROPDOWN_MENU,
+          position: google.maps.ControlPosition.TOP_RIGHT,
+          mapTypeIds: ['roadmap', 'satellite', 'hybrid']
+        },
+        streetViewControl: true,
+        streetViewControlOptions: {
+          position: google.maps.ControlPosition.RIGHT_BOTTOM
+        },
+        fullscreenControl: true,
+        fullscreenControlOptions: {
+          position: google.maps.ControlPosition.RIGHT_TOP
+        },
+        zoomControl: true,
+        zoomControlOptions: {
+          position: google.maps.ControlPosition.RIGHT_BOTTOM
+        }
       });
 
       mapInstanceRef.current = map;

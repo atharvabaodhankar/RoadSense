@@ -51,15 +51,28 @@ export default function MapPage({ userRole }) {
     const { Map } = await google.maps.importLibrary("maps");
     
     // Create map with mapId (required for advanced markers)
-    // Note: Don't use 'styles' property when using mapId - configure styles in Cloud Console instead
     const map = new Map(document.getElementById('map'), {
       zoom: 12,
       center,
       mapId: 'ROADSENSE_MAP',
-      mapTypeControl: false,
-      streetViewControl: false,
+      mapTypeControl: true,
+      mapTypeControlOptions: {
+        style: google.maps.MapTypeControlStyle.HORIZONTAL_BAR,
+        position: google.maps.ControlPosition.TOP_RIGHT,
+        mapTypeIds: ['roadmap', 'satellite', 'hybrid', 'terrain']
+      },
+      streetViewControl: true,
+      streetViewControlOptions: {
+        position: google.maps.ControlPosition.RIGHT_BOTTOM
+      },
       fullscreenControl: true,
-      zoomControl: true
+      fullscreenControlOptions: {
+        position: google.maps.ControlPosition.RIGHT_TOP
+      },
+      zoomControl: true,
+      zoomControlOptions: {
+        position: google.maps.ControlPosition.RIGHT_BOTTOM
+      }
     });
 
     mapRef.current = map;
