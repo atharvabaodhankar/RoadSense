@@ -205,7 +205,7 @@ export default function Upload({ userRole }) {
           </div>
 
           {/* Main Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-[1fr_420px] gap-5 items-start">
+          <div className="grid grid-cols-1 gap-5 items-start">
             {/* LEFT: Form */}
             <div className="flex flex-col gap-4">
               {/* GPS Card */}
