@@ -68,11 +68,30 @@ router.get("/:id", authenticateUser, async (req, res) => {
   }
 });
 
-// Delete inspection (admin only)
-router.delete("/:id", authenticateUser, requireAdmin, async (req, res) => {
+// Delete inspection (own inspections or admin)
+router.delete("/:id", authenticateUser, async (req, res) => {
   try {
     const { id } = req.params;
 
+    // First check if inspection exists and user has permission
+    let query = supabase
+      .from("inspections")
+      .select("id, inspector_id")
+      .eq("id", id)
+      .single();
+
+    const { data: inspection, error: fetchError } = await query;
+
+    if (fetchError || !inspection) {
+      return res.status(404).json({ error: "Inspection not found" });
+    }
+
+    // Check permission: admin can delete any, users can delete their own
+    if (req.user.role !== "admin" && inspection.inspector_id !== req.user.id) {
+      return res.status(403).json({ error: "Not authorized to delete this inspection" });
+    }
+
+    // Delete the inspection
     const { error } = await supabase
       .from("inspections")
       .delete()
